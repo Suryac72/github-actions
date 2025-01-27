@@ -10,6 +10,9 @@ on:
         description: 'New package version'
         required: true
 
+permissions:
+  contents: write
+
 jobs:
   upgrade-package-version:
     runs-on: ubuntu-latest
@@ -28,19 +31,33 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      # - name: Run Package Update Script
-      #   run: node src/upgrade-package.mjs ${{ github.event.inputs.package-name }} ${{ github.event.inputs.package-version }}
-
       - name: Run Package Update Script and Commit Changes
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git checkout -b update-${{ github.event.inputs.package-name }}-${{ github.event.inputs.package-version }}
+
+          BRANCH_NAME="update-${{ github.event.inputs.package-name }}-${{ github.event.inputs.package-version }}"
+
+          if git ls-remote --exit-code --heads origin $BRANCH_NAME; then
+            echo "Branch $BRANCH_NAME already exists. Checking it out..."
+            git checkout $BRANCH_NAME
+          else
+            echo "Creating new branch: $BRANCH_NAME"
+            git checkout -b $BRANCH_NAME
+          fi
+
           node src/upgrade-package.mjs ${{ github.event.inputs.package-name }} ${{ github.event.inputs.package-version }}
+
           git status
+
           git add .
-          git commit -m "chore: update ${{ github.event.inputs.package-name }} to version ${{ github.event.inputs.package-version }}"
-          git push origin update-${{ github.event.inputs.package-name }}-${{ github.event.inputs.package-version }}
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+            exit 0
+          else
+            git commit -m "chore: update ${{ github.event.inputs.package-name }} to version ${{ github.event.inputs.package-version }}"
+            git push origin $BRANCH_NAME
+          fi
 
   create-pull-request:
     runs-on: ubuntu-latest
