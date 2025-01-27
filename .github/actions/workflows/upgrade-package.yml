@@ -1,9 +1,6 @@
 name: 'Update Package Versions'
 
 on:
-  push:
-    branches:
-      - us/TA3169035/package-upgrade
   workflow_dispatch:
     inputs:
       package-name:
