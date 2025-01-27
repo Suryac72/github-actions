@@ -21,4 +21,4 @@ jobs:
           node-version: '20'
 
       - name: Run Package Update Script
-        run: npx ts-node upgrade-package.mjs ${{ github.event.inputs.package-name }} ${{ github.event.inputs.package-version }}
+        run: npx ts-node ./src/upgrade-package.mjs ${{ github.event.inputs.package-name }} ${{ github.event.inputs.package-version }}
