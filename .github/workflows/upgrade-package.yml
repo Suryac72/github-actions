@@ -55,7 +55,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: update-${{ github.event.inputs.package-name }}-${{ github.event.inputs.package-version }}
-          base: main
+          base: master
           title: "chore: Update ${{ github.event.inputs.package-name }} to v${{ github.event.inputs.package-version }}"
           body: |
             This PR updates the package `${{ github.event.inputs.package-name }}` to version `${{ github.event.inputs.package-version }}`.
