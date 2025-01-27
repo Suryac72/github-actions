@@ -1,13 +1,13 @@
-name: 'Update Package Versions'
+name: "Update Package Versions"
 
 on:
   workflow_dispatch:
     inputs:
       package-name:
-        description: 'Package to update'
+        description: "Package to update"
         required: true
       package-version:
-        description: 'New package version'
+        description: "New package version"
         required: true
 
 jobs:
@@ -15,15 +15,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: 'Checkout Repository'
+      - name: "Checkout Repository"
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: 'Setup NodeJS'
+      - name: "Setup NodeJS"
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: Install Dependencies
         run: npm install
@@ -35,11 +35,30 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git checkout -b update-${{ github.event.inputs.package-name }}-${{ github.event.inputs.package-version }}
+
+          BRANCH_NAME="update-${{ github.event.inputs.package-name }}-${{ github.event.inputs.package-version }}"
+
+          # Check if branch already exists
+          if git ls-remote --exit-code --heads origin $BRANCH_NAME; then
+            echo "Branch $BRANCH_NAME already exists. Checking it out..."
+            git checkout $BRANCH_NAME
+          else
+            echo "Creating a new branch: $BRANCH_NAME"
+            git checkout -b $BRANCH_NAME
+          fi
+
           git status
+
+          # Stage changes
           git add .
-          git commit -m "chore: update ${{ github.event.inputs.package-name }} to version ${{ github.event.inputs.package-version }}"
-          git push origin update-${{ github.event.inputs.package-name }}-${{ github.event.inputs.package-version }}
+
+          # Commit changes if any
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore: update ${{ github.event.inputs.package-name }} to version ${{ github.event.inputs.package-version }}"
+            git push origin $BRANCH_NAME
+          fi
 
   create-pull-request:
     runs-on: ubuntu-latest
