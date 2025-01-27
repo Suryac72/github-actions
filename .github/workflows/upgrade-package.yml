@@ -37,7 +37,7 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git checkout -b update-${{ github.event.inputs.package-name }}-${{ github.event.inputs.package-version }}
           git status
-          git add package.json package-lock.json
+          git add .
           git commit -m "chore: update ${{ github.event.inputs.package-name }} to version ${{ github.event.inputs.package-version }}"
           git push origin update-${{ github.event.inputs.package-name }}-${{ github.event.inputs.package-version }}
 
