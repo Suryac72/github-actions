@@ -23,8 +23,8 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Set script permissions
-        run: chmod +x src/upgrade-package.mjs
+      - name: Install Dependencies
+        run: npm install
 
       - name: Run Package Update Script
         run: node src/upgrade-package.mjs ${{ github.event.inputs.package-name }} ${{ github.event.inputs.package-version }}
