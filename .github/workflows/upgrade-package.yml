@@ -15,10 +15,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: 'Checkout Repository'
+        uses: actions/checkout@v4
+
       - name: 'Setup NodeJS'
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
+      - name: Set script permissions
+        run: chmod +x src/upgrade-package.mjs
+
       - name: Run Package Update Script
-        run: node upgrade-package.mjs ${{ github.event.inputs.package-name }} ${{ github.event.inputs.package-version }}
+        run: node src/upgrade-package.mjs ${{ github.event.inputs.package-name }} ${{ github.event.inputs.package-version }}
