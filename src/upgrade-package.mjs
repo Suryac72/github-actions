@@ -105,11 +105,15 @@ function updatePackageVersion(packageName, newVersion) {
 }
 
 // Function to create a branch, commit changes, and push to remote
-function createBranchAndPush(branchName) {
+function createBranchAndPush() {
     try {
          // Configure Git user details
         executeCommand('git config --global user.name "github-actions[bot]"');
         executeCommand('git config --global user.email "github-actions[bot]@users.noreply.github.com"');
+
+        // Generate a branch name dynamically
+        const timestamp = new Date().toISOString().replace(/[:.-]/g, '').slice(0, 15);
+        const branchName = `update-packages-${timestamp}`;
 
         console.log(chalk.blue(`Creating and switching to branch: ${branchName}`));
         executeCommand(`git checkout -b ${branchName}`, 'Failed to create a new branch.');
@@ -123,7 +127,10 @@ function createBranchAndPush(branchName) {
         console.log(chalk.blue('Pushing changes to remote...'));
         executeCommand(`git push --set-upstream origin ${branchName}`, 'Failed to push changes to remote.');
 
-        console.log(chalk.green('✔ Changes pushed successfully.'));        
+        console.log(chalk.green('✔ Changes pushed successfully.'));
+        
+        // Output the branch name for use in the GitHub workflow
+        process.stdout.write(`::set-output name=branch-name::${branchName}\n`);
     } catch (err) {
         console.error(chalk.red('Error during Git operations:'), err.message);
     }
@@ -146,8 +153,5 @@ for (let i = 0; i < args.length; i += 2) {
     updatePackageVersion(packageName, newVersion);
 }
 
-// Generate a branch name dynamically
-const timestamp = new Date().toISOString().replace(/[:.-]/g, '').slice(0, 15);
-const branchName = `update-packages-${timestamp}`;
-
-createBranchAndPush(branchName);
+// Create the branch and push changes
+createBranchAndPush();
