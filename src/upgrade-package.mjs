@@ -153,6 +153,15 @@ function createBranchAndPush(packageName, newVersion) {
       );
     }
 
+    console.log(
+      chalk.blue("Staging any pending changes before pulling remote branch...")
+    );
+    executeCommand("git add .", "Failed to stage pending changes.");
+    executeCommand(
+      'git commit -m "chore: temporary commit to sync with remote" || echo "No changes to commit."',
+      "Failed to commit pending changes."
+    );
+
     console.log(chalk.blue("Pulling remote changes (if any)..."));
     try {
       executeCommand(
@@ -167,7 +176,7 @@ function createBranchAndPush(packageName, newVersion) {
       );
     }
 
-    console.log(chalk.blue("Staging changes..."));
+    console.log(chalk.blue("Staging final changes..."));
     executeCommand(
       "git add package.json package-lock.json",
       "Failed to stage changes."
