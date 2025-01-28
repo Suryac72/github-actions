@@ -162,23 +162,9 @@ function createBranchAndPush(packageName, newVersion) {
       "Failed to commit pending changes."
     );
 
-    console.log(chalk.blue("Pulling remote changes (if any)..."));
-    try {
-      executeCommand(
-        `git pull origin ${branchName} --rebase`,
-        `Failed to pull remote changes for ${branchName}.`
-      );
-    } catch {
-      console.log(
-        chalk.yellow(
-          `⚠️  No remote branch found for ${branchName}. Proceeding...`
-        )
-      );
-    }
-
     console.log(chalk.blue("Staging final changes..."));
     executeCommand(
-      "git add package.json package-lock.json",
+      "git add .",
       "Failed to stage changes."
     );
 
