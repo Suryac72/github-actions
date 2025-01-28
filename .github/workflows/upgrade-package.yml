@@ -56,7 +56,7 @@ jobs:
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          branch: update-${{ github.event.inputs.package-name }}-${{ github.event.inputs.package-version }}
+          branch: ${{ env.branchName }}  # Use the branch name passed from the previous step
           base: master
           title: "chore: Update ${{ github.event.inputs.package-name }} to v${{ github.event.inputs.package-version }}"
           body: |
