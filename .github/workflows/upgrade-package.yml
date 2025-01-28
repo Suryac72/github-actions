@@ -47,29 +47,29 @@ jobs:
         id: upgrade
         run: node src/upgrade-package.mjs ${{ github.event.inputs.package-name }} ${{ github.event.inputs.package-version }}
 
-  create-pull-request:
-    runs-on: ubuntu-latest
-    needs: upgrade-package-version
+  # create-pull-request:
+  #   runs-on: ubuntu-latest
+  #   needs: upgrade-package-version
 
-    steps:
-      - name: 'Checkout Repository'
-        uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+  #   steps:
+  #     - name: 'Checkout Repository'
+  #       uses: actions/checkout@v4
+  #       with:
+  #         token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          title: "chore: Update ${{ github.event.inputs.package-name }} to v${{ github.event.inputs.package-version }}"
-          body: This PR updates the package `${{ github.event.inputs.package-name }}` to version `${{ github.event.inputs.package-version }}`
-          labels: dependencies
-          assignees: suryac72
-          branch: update-${{ github.event.inputs.package-name }}-${{ github.event.inputs.package-version }}
-          base: master
-          commit-message: "chore: Update ${{ github.event.inputs.package-name }} to v${{ github.event.inputs.package-version }}"
-          committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
-          author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
-          signoff: false
-          delete-branch: false
-          draft: false
+  #     - name: Create Pull Request
+  #       uses: peter-evans/create-pull-request@v6
+  #       with:
+  #         token: ${{ secrets.GITHUB_TOKEN }}
+  #         title: "chore: Update ${{ github.event.inputs.package-name }} to v${{ github.event.inputs.package-version }}"
+  #         body: This PR updates the package `${{ github.event.inputs.package-name }}` to version `${{ github.event.inputs.package-version }}`
+  #         labels: dependencies
+  #         assignees: suryac72
+  #         branch: update-${{ github.event.inputs.package-name }}-${{ github.event.inputs.package-version }}
+  #         base: master
+  #         commit-message: "chore: Update ${{ github.event.inputs.package-name }} to v${{ github.event.inputs.package-version }}"
+  #         committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+  #         author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+  #         signoff: false
+  #         delete-branch: false
+  #         draft: false
