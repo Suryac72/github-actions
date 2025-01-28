@@ -158,7 +158,7 @@ function createBranchAndPush(packageName, newVersion) {
     );
     executeCommand("git add .", "Failed to stage pending changes.");
     executeCommand(
-      'git commit -m "chore: temporary commit to sync with remote" || echo "No changes to commit."',
+      'git commit -m "chore: updating dependencies" || echo "No changes to commit."',
       "Failed to commit pending changes."
     );
 

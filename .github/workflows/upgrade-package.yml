@@ -65,7 +65,7 @@ jobs:
           body: This PR updates the package `${{ github.event.inputs.package-name }}` to version `${{ github.event.inputs.package-version }}`
           labels: dependencies
           assignees: suryac72
-          branch: ${{ steps.upgrade.outputs.branch-name }}
+          branch: update-${{ github.event.inputs.package-name }}-${{ github.event.inputs.package-version }}
           base: master
           commit-message: "chore: Update ${{ github.event.inputs.package-name }} to v${{ github.event.inputs.package-version }}"
           committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
