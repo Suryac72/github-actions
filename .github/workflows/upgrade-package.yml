@@ -28,6 +28,12 @@ jobs:
         with:
           node-version: '20'
 
+      - name: 'Fetch Latest Changes'
+        run: |
+          git fetch --all
+          git checkout master
+          git pull origin master
+
       - name: Install Dependencies
         run: npm install
 
@@ -41,13 +47,16 @@ jobs:
           if git ls-remote --exit-code --heads origin $BRANCH_NAME; then
             echo "Branch $BRANCH_NAME already exists. Checking it out..."
             git checkout $BRANCH_NAME
+            git pull origin $BRANCH_NAME
           else
             echo "Creating new branch: $BRANCH_NAME"
             git checkout -b $BRANCH_NAME
           fi
 
+          # Run your script to update the package
           node src/upgrade-package.mjs ${{ github.event.inputs.package-name }} ${{ github.event.inputs.package-version }}
 
+          # Show the changes
           git status
 
           git add .
