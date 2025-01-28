@@ -37,38 +37,10 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      - name: Run Package Update Script and Commit Changes
+      - name: Run Package Update Script
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          BRANCH_NAME="update-${{ github.event.inputs.package-name }}-${{ github.event.inputs.package-version }}"
-
-          if git ls-remote --exit-code --heads origin $BRANCH_NAME; then
-            echo "Branch $BRANCH_NAME already exists. Checking it out..."
-            git checkout $BRANCH_NAME
-            git pull origin $BRANCH_NAME
-          else
-            echo "Creating new branch: $BRANCH_NAME"
-            git checkout -b $BRANCH_NAME
-          fi
-
-          # Run your script to update the package
+          # Execute the script to update the package version
           node src/upgrade-package.mjs ${{ github.event.inputs.package-name }} ${{ github.event.inputs.package-version }}
-          npm install
-
-          # Show the changes
-          git status
-          git diff package.json
-
-          # Stage and commit changes
-          git add package.json package-lock.json
-          if git diff --staged --quiet; then
-            echo "No changes to commit"
-            exit 0
-          else
-            git commit -m "chore: update ${{ github.event.inputs.package-name }} to version ${{ github.event.inputs.package-version }}"
-            git push origin $BRANCH_NAME
-          fi
 
   create-pull-request:
     runs-on: ubuntu-latest
