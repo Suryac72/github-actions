@@ -63,5 +63,5 @@ jobs:
             - Automated by GitHub Actions 🤖
           labels: dependencies
           assignees: suryac72
-          head: ${{ steps.upgrade.outputs.branch-name }}  # Dynamic branch name from upgrade-package.mjs
+          head: update-${{ github.event.inputs.package-name }}-${{ github.event.inputs.package-version }} # Dynamic branch name from upgrade-package.mjs
           base: master
