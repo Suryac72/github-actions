@@ -112,8 +112,8 @@ function createBranchAndPush() {
         executeCommand('git config --global user.email "github-actions[bot]@users.noreply.github.com"');
 
         // Generate a branch name dynamically
-        const timestamp = new Date().toISOString().replace(/[:.-]/g, '').slice(0, 15);
-        const branchName = `update-packages-${timestamp}`;
+        const args = process.argv.slice(2);
+        const branchName = `update-${args[0]}-${args[1]}`;
 
         console.log(chalk.blue(`Creating and switching to branch: ${branchName}`));
         executeCommand(`git checkout -b ${branchName}`, 'Failed to create a new branch.');
