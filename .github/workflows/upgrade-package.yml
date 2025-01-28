@@ -33,19 +33,20 @@ jobs:
           git fetch --all
           git checkout master
           git pull origin master
-          
-      - name: Install Dependencies
-        run: npm install
 
-      - name: Run Package Update Script
+      - name: 'Install Dependencies'
+        run: npm ci
+
+      - name: 'Run Package Update Script'
         id: upgrade
         run: |
           node src/upgrade-package.mjs ${{ github.event.inputs.package-name }} ${{ github.event.inputs.package-version }}
 
-      - name: 'Check if new branch exists'
+      - name: 'Debug Git Environment'
         run: |
-          git branch -r
-          git checkout update-${{ github.event.inputs.package-name }}-${{ github.event.inputs.package-version }}
+          git status
+          git branch
+          ls -al
 
   create-pull-request:
     runs-on: ubuntu-latest

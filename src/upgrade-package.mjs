@@ -98,25 +98,25 @@ function updatePackageVersion(packageName, newVersion) {
         } else {
             console.log(chalk.yellow(`⚠️  Skipping npm install because ${packageName} was not updated.`));
         }
-
     } catch (err) {
         console.error(chalk.red('Error updating package version:'), err.message);
+        process.exit(1);
     }
 }
 
 // Function to create a branch, commit changes, and push to remote
 function createBranchAndPush() {
     try {
-         // Configure Git user details
-        executeCommand('git config --global user.name "github-actions[bot]"');
-        executeCommand('git config --global user.email "github-actions[bot]@users.noreply.github.com"');
+        // Configure Git user details
+        executeCommand('git config --global user.name "github-actions[bot]"', 'Failed to configure Git user.name.');
+        executeCommand('git config --global user.email "github-actions[bot]@users.noreply.github.com"', 'Failed to configure Git user.email.');
 
         // Generate a branch name dynamically
         const args = process.argv.slice(2);
         const branchName = `update-${args[0]}-${args[1]}`;
 
-        console.log(chalk.blue(`Creating and switching to branch: ${branchName}`));
-        executeCommand(`git checkout -b ${branchName}`, 'Failed to create a new branch.');
+        console.log(chalk.blue(`Creating or switching to branch: ${branchName}`));
+        executeCommand(`git checkout -B ${branchName}`, 'Failed to create or switch to the branch.');
 
         console.log(chalk.blue('Staging changes...'));
         executeCommand('git add package.json package-lock.json', 'Failed to stage changes.');
@@ -128,30 +128,29 @@ function createBranchAndPush() {
         executeCommand(`git push --set-upstream origin ${branchName}`, 'Failed to push changes to remote.');
 
         console.log(chalk.green('✔ Changes pushed successfully.'));
-        
+
         // Output the branch name for use in the GitHub workflow
-        process.stdout.write(`::set-output name=branch-name::${branchName}\n`);
+        fs.appendFileSync(process.env.GITHUB_OUTPUT, `branch-name=${branchName}\n`);
     } catch (err) {
         console.error(chalk.red('Error during Git operations:'), err.message);
+        process.exit(1);
     }
 }
 
 // Command-line arguments
 const args = process.argv.slice(2);
 
-if (args.length === 0 || args.length % 2 !== 0) {
+if (args.length !== 2) {
     console.error(
-        chalk.red('Usage: node updatePackage.js <package-name-1> <new-version-1> [<package-name-2> <new-version-2> ...]')
+        chalk.red('Usage: node upgrade-package.mjs <package-name> <new-version>')
     );
     process.exit(1);
 }
 
-// Process each package-version pair
-for (let i = 0; i < args.length; i += 2) {
-    const packageName = args[i];
-    const newVersion = args[i + 1];
-    updatePackageVersion(packageName, newVersion);
-}
+const [packageName, newVersion] = args;
+
+// Update the package version
+updatePackageVersion(packageName, newVersion);
 
 // Create the branch and push changes
 createBranchAndPush();
