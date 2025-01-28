@@ -107,6 +107,10 @@ function updatePackageVersion(packageName, newVersion) {
 // Function to create a branch, commit changes, and push to remote
 function createBranchAndPush(branchName) {
     try {
+         // Configure Git user details
+        executeCommand('git config --global user.name "github-actions[bot]"');
+        executeCommand('git config --global user.email "github-actions[bot]@users.noreply.github.com"');
+
         console.log(chalk.blue(`Creating and switching to branch: ${branchName}`));
         executeCommand(`git checkout -b ${branchName}`, 'Failed to create a new branch.');
 
