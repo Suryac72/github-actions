@@ -16,7 +16,7 @@ permissions:
 jobs:
   upgrade-package-version:
     runs-on: ubuntu-latest
-
+    
     steps:
       - name: 'Checkout Repository'
         uses: actions/checkout@v4
@@ -33,15 +33,19 @@ jobs:
           git fetch --all
           git checkout master
           git pull origin master
-
+          
       - name: Install Dependencies
         run: npm install
 
       - name: Run Package Update Script
         id: upgrade
         run: |
-          # Execute the script to update the package version
           node src/upgrade-package.mjs ${{ github.event.inputs.package-name }} ${{ github.event.inputs.package-version }}
+
+      - name: 'Check if new branch exists'
+        run: |
+          git branch -r
+          git checkout update-${{ github.event.inputs.package-name }}-${{ github.event.inputs.package-version }}
 
   create-pull-request:
     runs-on: ubuntu-latest
@@ -58,7 +62,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           title: "chore: Update ${{ github.event.inputs.package-name }} to v${{ github.event.inputs.package-version }}"
-          body: This PR updates the package `body-parser` to version `1.20.3`.
+          body: This PR updates the package `${{ github.event.inputs.package-name }}` to version `${{ github.event.inputs.package-version }}`
           labels: dependencies
           assignees: suryac72
           branch: update-${{ github.event.inputs.package-name }}-${{ github.event.inputs.package-version }}
@@ -69,4 +73,3 @@ jobs:
           signoff: false
           delete-branch: false
           draft: false
-
