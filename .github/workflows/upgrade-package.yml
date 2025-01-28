@@ -16,6 +16,8 @@ permissions:
 jobs:
   upgrade-package-version:
     runs-on: ubuntu-latest
+    outputs:
+      branch-name: ${{ steps.create-branch.outputs.branch-name }}  # Set the branch name as an output
 
     steps:
       - name: 'Checkout Repository'
@@ -39,12 +41,22 @@ jobs:
 
       - name: Run Package Update Script
         run: |
-          # Execute the script to update the package version
           node src/upgrade-package.mjs ${{ github.event.inputs.package-name }} ${{ github.event.inputs.package-version }}
+
+      - name: Create Branch for Changes
+        id: create-branch
+        run: |
+          # Generate a branch name dynamically based on timestamp
+          timestamp=$(date +'%Y%m%d%H%M%S')
+          branch_name="update-packages-${timestamp}"
+          echo "branch-name=${branch_name}" >> $GITHUB_ENV
+          echo "::set-output name=branch-name::${branch_name}"
 
   create-pull-request:
     runs-on: ubuntu-latest
     needs: upgrade-package-version
+    with:
+      branch: ${{ needs.upgrade-package-version.outputs.branch-name }}  # Use the dynamically set branch name from the previous job
 
     steps:
       - name: Checkout Repository
@@ -56,7 +68,7 @@ jobs:
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ env.branchName }}  # Use the branch name passed from the previous step
+          branch: ${{ needs.upgrade-package-version.outputs.branch-name }}  # Use the dynamically set branch name from previous step
           base: master
           title: "chore: Update ${{ github.event.inputs.package-name }} to v${{ github.event.inputs.package-version }}"
           body: |
