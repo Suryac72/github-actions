@@ -58,6 +58,7 @@ jobs:
 
           # Show the changes
           git status
+          git diff package.json
 
           git add .
           if git diff --staged --quiet; then
