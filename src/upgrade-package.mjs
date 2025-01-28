@@ -5,6 +5,7 @@ import chalk from 'chalk';
 
 // Function to execute shell commands
 function executeCommand(command, errorMessage) {
+    console.log(chalk.blue(`Executing command: ${command}`));
     try {
         execSync(command, { stdio: 'inherit' });
     } catch (error) {
@@ -18,29 +19,17 @@ function updatePackageVersion(packageName, newVersion) {
     let nestedUpdated = false;
     let packageUpdated = false;
 
-    // Function to check if any parent includes @makemydeal or @coxauto
-    function isParentMakemydeal(parentName) {
-        return parentName.includes('@makemydeal') || parentName.includes('@coxauto');
-    }
-
-    // Function to update the version of the parent that uses the child package
-    function updateParentVersion(dependencies, parentName = '') {
+    // Function to update nested dependencies
+    function updateNestedDependencies(dependencies) {
         for (const [depName, depDetails] of Object.entries(dependencies || {})) {
-            if (isParentMakemydeal(parentName)) {
-                console.log(
-                    chalk.yellow(`⚠️  Skipping update for ${depName} as its parent (${parentName}) starts with @makemydeal.`)
-                );
-                continue;
-            }
-
             if (depName === packageName && depDetails.version !== newVersion) {
                 depDetails.version = newVersion;
                 nestedUpdated = true;
-                console.log(chalk.green(`✔ Updated ${packageName} to version ${newVersion} in ${parentName}.`));
+                console.log(chalk.green(`✔ Updated ${packageName} to version ${newVersion} in nested dependencies.`));
             }
 
             if (depDetails.dependencies) {
-                updateParentVersion(depDetails.dependencies, depName);
+                updateNestedDependencies(depDetails.dependencies);
             }
         }
     }
@@ -57,7 +46,7 @@ function updatePackageVersion(packageName, newVersion) {
 
         const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
 
-        // Check for direct dependency in package.json
+        // Update direct dependencies
         let updated = false;
         ['dependencies', 'devDependencies'].forEach((depType) => {
             if (packageJson[depType] && packageJson[depType][packageName]) {
@@ -82,7 +71,7 @@ function updatePackageVersion(packageName, newVersion) {
 
         if (fs.existsSync(packageLockPath)) {
             const packageLock = JSON.parse(fs.readFileSync(packageLockPath, 'utf8'));
-            updateParentVersion(packageLock.dependencies);
+            updateNestedDependencies(packageLock.dependencies);
 
             if (nestedUpdated) {
                 fs.writeFileSync(packageLockPath, JSON.stringify(packageLock, null, 2), 'utf8');
@@ -105,32 +94,30 @@ function updatePackageVersion(packageName, newVersion) {
 }
 
 // Function to create a branch, commit changes, and push to remote
-function createBranchAndPush() {
+function createBranchAndPush(packageName, newVersion) {
     try {
         // Configure Git user details
-        executeCommand('git config --global user.name "github-actions[bot]"', 'Failed to configure Git user.name.');
-        executeCommand('git config --global user.email "github-actions[bot]@users.noreply.github.com"', 'Failed to configure Git user.email.');
+        executeCommand('git config --global user.name "github-actions[bot]"');
+        executeCommand('git config --global user.email "github-actions[bot]@users.noreply.github.com"');
 
         // Generate a branch name dynamically
-        const args = process.argv.slice(2);
-        const branchName = `update-${args[0]}-${args[1]}`;
-
-        console.log(chalk.blue(`Creating or switching to branch: ${branchName}`));
-        executeCommand(`git checkout -B ${branchName}`, 'Failed to create or switch to the branch.');
+        const branchName = `update-${packageName}-${newVersion}`;
+        console.log(chalk.blue(`Creating and switching to branch: ${branchName}`));
+        executeCommand(`git checkout -b ${branchName}`, 'Failed to create a new branch.');
 
         console.log(chalk.blue('Staging changes...'));
         executeCommand('git add package.json package-lock.json', 'Failed to stage changes.');
 
         console.log(chalk.blue('Committing changes...'));
-        executeCommand('git commit -m "chore: update package versions"', 'Failed to commit changes.');
+        executeCommand('git commit -m "chore: update package version"', 'Failed to commit changes.');
 
         console.log(chalk.blue('Pushing changes to remote...'));
         executeCommand(`git push --set-upstream origin ${branchName}`, 'Failed to push changes to remote.');
 
         console.log(chalk.green('✔ Changes pushed successfully.'));
 
-        // Output the branch name for use in the GitHub workflow
-        fs.appendFileSync(process.env.GITHUB_OUTPUT, `branch-name=${branchName}\n`);
+        // Output the branch name for use in GitHub Actions
+        console.log(`::set-output name=branch-name::${branchName}`);
     } catch (err) {
         console.error(chalk.red('Error during Git operations:'), err.message);
         process.exit(1);
@@ -141,16 +128,12 @@ function createBranchAndPush() {
 const args = process.argv.slice(2);
 
 if (args.length !== 2) {
-    console.error(
-        chalk.red('Usage: node upgrade-package.mjs <package-name> <new-version>')
-    );
+    console.error(chalk.red('Usage: node upgrade-package.mjs <package-name> <new-version>'));
     process.exit(1);
 }
 
 const [packageName, newVersion] = args;
 
-// Update the package version
+// Process the package update and push changes
 updatePackageVersion(packageName, newVersion);
-
-// Create the branch and push changes
-createBranchAndPush();
+createBranchAndPush(packageName, newVersion);

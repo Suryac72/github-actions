@@ -12,16 +12,22 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   upgrade-package-version:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: 'Checkout Repository'
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 'Configure Git'
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: 'Setup NodeJS'
         uses: actions/setup-node@v4
@@ -34,19 +40,12 @@ jobs:
           git checkout master
           git pull origin master
 
-      - name: 'Install Dependencies'
-        run: npm ci
+      - name: Install Dependencies
+        run: npm install
 
-      - name: 'Run Package Update Script'
+      - name: Run Package Update Script
         id: upgrade
-        run: |
-          node src/upgrade-package.mjs ${{ github.event.inputs.package-name }} ${{ github.event.inputs.package-version }}
-
-      - name: 'Debug Git Environment'
-        run: |
-          git status
-          git branch
-          ls -al
+        run: node src/upgrade-package.mjs ${{ github.event.inputs.package-name }} ${{ github.event.inputs.package-version }}
 
   create-pull-request:
     runs-on: ubuntu-latest
@@ -66,11 +65,11 @@ jobs:
           body: This PR updates the package `${{ github.event.inputs.package-name }}` to version `${{ github.event.inputs.package-version }}`
           labels: dependencies
           assignees: suryac72
-          branch: update-${{ github.event.inputs.package-name }}-${{ github.event.inputs.package-version }}
+          branch: ${{ steps.upgrade.outputs.branch-name }}
           base: master
           commit-message: "chore: Update ${{ github.event.inputs.package-name }} to v${{ github.event.inputs.package-version }}"
           committer: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
-          author: Suryac72 <67498076+Suryac72@users.noreply.github.com>
+          author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
           signoff: false
           delete-branch: false
           draft: false
