@@ -28,20 +28,11 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Ensure Branch Sync
+      - name: 'Fetch Latest Changes'
         run: |
-          BRANCH_NAME="update-${{ github.event.inputs.package-name }}-${{ github.event.inputs.package-version }}"
-          git fetch origin master
+          git fetch --all
           git checkout master
           git pull origin master
-          if git ls-remote --exit-code --heads origin $BRANCH_NAME; then
-            echo "Branch $BRANCH_NAME already exists. Checking it out..."
-            git checkout $BRANCH_NAME
-            git pull origin $BRANCH_NAME
-          else
-            echo "Creating new branch: $BRANCH_NAME"
-            git checkout -b $BRANCH_NAME
-          fi
 
       - name: Install Dependencies
         run: npm install
@@ -53,15 +44,49 @@ jobs:
 
           BRANCH_NAME="update-${{ github.event.inputs.package-name }}-${{ github.event.inputs.package-version }}"
 
+          if git ls-remote --exit-code --heads origin $BRANCH_NAME; then
+            echo "Branch $BRANCH_NAME already exists. Checking it out..."
+            git checkout $BRANCH_NAME
+            git pull origin $BRANCH_NAME
+          else
+            echo "Creating new branch: $BRANCH_NAME"
+            git checkout -b $BRANCH_NAME
+          fi
+
+          # Run your script to update the package
           node src/upgrade-package.mjs ${{ github.event.inputs.package-name }} ${{ github.event.inputs.package-version }}
 
-          git add .
-          git commit -m "chore: update ${{ github.event.inputs.package-name }} to version ${{ github.event.inputs.package-version }}"
-          git push origin $BRANCH_NAME --force
-
-      - name: Debug Changes
-        run: |
-          echo "=== Final Git Status ==="
+          # Show the changes
           git status
-          echo "=== Final Diff ==="
-          git diff
+
+          git add .
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+            exit 0
+          else
+            git commit -m "chore: update ${{ github.event.inputs.package-name }} to version ${{ github.event.inputs.package-version }}"
+            git push origin $BRANCH_NAME
+          fi
+
+  create-pull-request:
+    runs-on: ubuntu-latest
+    needs: upgrade-package-version
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: update-${{ github.event.inputs.package-name }}-${{ github.event.inputs.package-version }}
+          base: master
+          title: "chore: Update ${{ github.event.inputs.package-name }} to v${{ github.event.inputs.package-version }}"
+          body: |
+            This PR updates the package `${{ github.event.inputs.package-name }}` to version `${{ github.event.inputs.package-version }}`.
+            - Automated by GitHub Actions 🤖
+          labels: dependencies
+          assignees: suryac72
